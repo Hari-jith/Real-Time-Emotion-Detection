@@ -99,15 +99,15 @@ Classification Report
 
 ### Training History
 
-*(Insert training accuracy/loss graph here)*
+*![Base Model](results/mobilenet_base_accuracy_loss.png)*
 
 ### Fine-Tuning History
 
-*(Insert fine-tuning accuracy/loss graph here)*
+*![Fine Tuning](results/mobilenet_finetuned_accuracy_loss.png)*
 
 ### Confusion Matrix
 
-*(Insert confusion matrix here)*
+*![Confusion Matrix](results/mobilenet_confusion_matrix.png)*
 
 ---
 
