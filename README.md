@@ -574,9 +574,7 @@ The curves are used to analyze:
 * Training/validation gaps
 * Effect of fine-tuning
 
-The complete curves are available in the `cnn_model.ipynb` notebook.
-
-Due to repository presentation constraints, only selected plots are included in the repository.
+The complete curves are available in the `cnn_model.ipynb` notebook and results folder.
 
 ---
 
@@ -846,12 +844,12 @@ Real-Time-Video-Emotion-Detection/
 ├── notebooks/
 │   └── cnn-model.ipynb
 │
-├── assets/
+├── results/
 │   ├── mobilenetv2_base_confusion_matrix.png
 │   ├── mobilenetv2_finetuned_confusion_matrix.png
 │   ├── efficientnetb0_base_confusion_matrix.png
 │   ├── efficientnetb0_finetuned_confusion_matrix.png
-│   └── training_curves.png
+│   └── training_curves/
 │
 ├── models/
 │   └── .gitkeep
