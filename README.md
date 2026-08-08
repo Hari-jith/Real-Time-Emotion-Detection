@@ -1,4 +1,3 @@
-````md
 # Real-Time Video Emotion Detection
 
 A deep learning project for detecting human emotions from real-time video.
