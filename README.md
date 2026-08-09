@@ -2,11 +2,13 @@
 
 A deep learning project for detecting human emotions from real-time video.
 
-The planned system combines **YOLO-based face detection** with a **CNN-based facial emotion classifier** to detect faces in video frames and classify their emotional state in real time.
+The system combines **YOLO-based face detection** with a **CNN-based facial emotion classifier** to detect faces in video frames and classify their emotional state in real time.
 
 > **Project Status: 🚧 In Progress**
 >
-> The current repository contains the completed **CNN-based facial emotion classification stage**. The YOLO-based face detection and real-time video integration stages are yet to be implemented.
+> The **YOLO-based face detection stage** and the **CNN-based facial emotion classification stage** have been completed independently.
+>
+> The remaining major task is to integrate both models into a single real-time video emotion detection pipeline.
 
 ---
 
@@ -14,7 +16,12 @@ The planned system combines **YOLO-based face detection** with a **CNN-based fac
 
 Facial expressions provide important visual cues about a person's emotional state. This project aims to develop a real-time system capable of detecting faces from a video stream and classifying the detected facial expressions into multiple emotion categories.
 
-The final system is planned as a two-stage computer vision pipeline:
+The project consists of two major deep learning components:
+
+1. **YOLO-based face detection**
+2. **CNN-based facial emotion classification**
+
+The planned end-to-end pipeline is:
 
 ```text
                     Real-Time Video
@@ -29,6 +36,12 @@ The final system is planned as a two-stage computer vision pipeline:
                            │
                            ▼
                   ┌─────────────────┐
+                  │ Face Crop &     │
+                  │ Preprocessing   │
+                  └────────┬────────┘
+                           │
+                           ▼
+                  ┌─────────────────┐
                   │ CNN Emotion     │
                   │ Classification │
                   └────────┬────────┘
@@ -40,11 +53,9 @@ The final system is planned as a two-stage computer vision pipeline:
                   └─────────────────┘
 ````
 
-The current implementation focuses on the second stage:
+Both individual components have now been developed.
 
-> **Facial Image → CNN → Emotion Classification**
-
-The YOLO-based face detection and real-time video pipeline will be added in later stages.
+The next step is to connect the YOLO face detector with the selected CNN emotion classifier.
 
 ---
 
@@ -53,49 +64,61 @@ The YOLO-based face detection and real-time video pipeline will be added in late
 The main objectives of the project are:
 
 * Develop a multi-class facial emotion classification model.
-* Compare different pretrained CNN architectures.
-* Evaluate both frozen-backbone and fine-tuned models.
-* Address class imbalance in the training data.
+* Develop a YOLO-based human face detection model.
+* Train and evaluate the face detection model using WIDER FACE.
+* Compare different pretrained CNN architectures for emotion classification.
+* Evaluate both frozen-backbone and fine-tuned CNN models.
+* Address class imbalance in the emotion classification dataset.
 * Analyze model performance using accuracy, precision, recall and F1-score.
 * Select the most suitable CNN model for the final real-time system.
-* Integrate the selected classifier with a YOLO-based face detector.
+* Integrate the YOLO face detector with the selected emotion classifier.
 * Process webcam/video frames in real time.
-* Display detected faces, predicted emotions and confidence scores.
+* Detect multiple faces in a frame.
+* Classify the emotion of each detected face.
+* Display bounding boxes, predicted emotions and confidence scores.
 
 ---
 
-# 🧠 Planned Final Architecture
+# 🧠 Final System Architecture
 
 The final system will consist of the following stages.
 
 ## Stage 1 — Face Detection
 
-YOLO will be used to locate human faces in each video frame.
+YOLO is used to locate human faces in each image or video frame.
 
 ```text
-Video Frame
-     │
-     ▼
-YOLO Face Detector
-     │
-     ├── Face 1
-     ├── Face 2
-     └── Face 3
+Input Image / Video Frame
+          │
+          ▼
+   YOLO Face Detector
+          │
+          ▼
+   Face Bounding Boxes
 ```
+
+The YOLO face detection stage has been completed using the **WIDER FACE** dataset.
+
+---
 
 ## Stage 2 — Face Preprocessing
 
-Each detected face will be cropped and preprocessed before being passed to the emotion classifier.
+Each detected face will be cropped from the original frame and prepared for the emotion classifier.
 
 ```text
-Detected Face
-      │
-      ▼
-Resize / Normalize
-      │
-      ▼
-CNN Input
+YOLO Bounding Box
+        │
+        ▼
+     Face Crop
+        │
+        ▼
+ Resize / Normalize
+        │
+        ▼
+ CNN Input
 ```
+
+---
 
 ## Stage 3 — Emotion Classification
 
@@ -105,7 +128,7 @@ The selected CNN model will classify each detected face into one of seven emotio
 Face Crop
    │
    ▼
-MobileNetV2 / Selected CNN
+Fine-Tuned MobileNetV2
    │
    ▼
 Softmax
@@ -118,6 +141,8 @@ Softmax
    ├── Angry
    └── Neutral
 ```
+
+---
 
 ## Stage 4 — Real-Time Visualization
 
@@ -136,13 +161,220 @@ The final system will display the detected face, predicted emotion and confidenc
 └──────────────────────────────────────────┘
 ```
 
+For multiple faces:
+
+```text
+                    Video Frame
+                         │
+                         ▼
+                   YOLO Detector
+                         │
+          ┌──────────────┼──────────────┐
+          ▼              ▼              ▼
+       Face 1          Face 2         Face 3
+          │              │              │
+          ▼              ▼              ▼
+     MobileNetV2     MobileNetV2    MobileNetV2
+          │              │              │
+          ▼              ▼              ▼
+        Happy          Sad           Neutral
+```
+
 ---
 
-# 📂 Dataset
+# 📂 Datasets
 
-## RAF-DB — Real-world Affective Faces Database
+The project uses two different datasets because the system contains two different computer vision tasks.
 
-The current CNN classification stage uses the **Real-world Affective Faces Database (RAF-DB)**.
+```text
+                    Project
+                       │
+             ┌─────────┴─────────┐
+             │                   │
+             ▼                   ▼
+        Face Detection      Emotion Classification
+             │                   │
+             ▼                   ▼
+        WIDER FACE             RAF-DB
+             │                   │
+             ▼                   ▼
+            YOLO              MobileNetV2
+```
+
+---
+
+# 1. WIDER FACE — Face Detection Dataset
+
+The YOLO face detection stage uses the **WIDER FACE** dataset.
+
+WIDER FACE is a large-scale face detection benchmark containing images with faces under challenging real-world conditions.
+
+The dataset includes scenes such as:
+
+* Parades
+* Handshaking
+* People Marching
+* Meetings
+* Groups
+* Interviews
+* Traffic
+* Stock Markets
+* Award Ceremonies
+* Concerts
+* Family Groups
+* Festivals
+* Sports
+* Workers
+* Students
+* Soldiers
+* And many other real-world scenarios
+
+The dataset contains substantial variation in:
+
+* Number of faces
+* Face size
+* Pose
+* Occlusion
+* Lighting
+* Scale
+* Background complexity
+* Crowd density
+
+These characteristics make it suitable for developing a robust face detection component.
+
+---
+
+## WIDER FACE Dataset Structure
+
+The dataset used during development follows a structure similar to:
+
+```text
+WIDER FACE/
+│
+├── WIDER_train/
+│   └── WIDER_train/
+│       └── images/
+│           ├── 0--Parade/
+│           ├── 1--Handshaking/
+│           ├── 2--Demonstration/
+│           ├── 3--Riot/
+│           ├── ...
+│           ├── 42--Car_Racing/
+│           └── ...
+│
+├── WIDER_val/
+│   └── WIDER_val/
+│       └── images/
+│           ├── 0--Parade/
+│           ├── 1--Handshaking/
+│           ├── 2--Demonstration/
+│           ├── ...
+│           └── ...
+│
+└── wider_face_split/
+    └── wider_face_split/
+        ├── readme.txt
+        ├── wider_face_test.mat
+        ├── wider_face_test_filelist.txt
+        ├── wider_face_train.mat
+        ├── wider_face_train_bbx_gt.txt
+        └── wider_face_val.mat
+```
+
+The WIDER FACE training split contains approximately **12,880 images** in the dataset environment used during development.
+
+---
+
+## YOLO Annotation Conversion
+
+The original WIDER FACE annotations are not directly in YOLO format.
+
+Therefore, the WIDER FACE bounding-box annotations were converted into YOLO-compatible label files.
+
+The conversion pipeline was:
+
+```text
+WIDER FACE Annotations
+          │
+          ▼
+WIDER FACE Bounding Boxes
+          │
+          ▼
+YOLO Annotation Conversion
+          │
+          ▼
+YOLO Label Files
+```
+
+The converted dataset follows the YOLO structure:
+
+```text
+wider_yolo/
+│
+├── images/
+│   ├── train/
+│   └── val/
+│
+└── labels/
+    ├── train/
+    └── val/
+```
+
+Each YOLO label contains the normalized bounding-box information required for face detection.
+
+The project uses a **single detection class**:
+
+```text
+0 → face
+```
+
+---
+
+## YOLO Face Detection Results
+
+The YOLO face detection stage has been completed.
+
+The trained detector is capable of detecting faces in a variety of WIDER FACE scenes, including:
+
+* Single-person images
+* Group photographs
+* Crowded scenes
+* Sports scenes
+* Meetings
+* Public events
+* Medical scenes
+* Outdoor scenes
+* Low-resolution faces
+* Images containing many faces
+
+Example detections include outputs such as:
+
+```text
+face 0.9
+face 0.8
+face 0.7
+face 0.5
+```
+
+where the value represents the model's detection confidence.
+
+The detection results demonstrate that the YOLO model can identify multiple faces within the same image.
+
+---
+
+## ⚠️ Dataset License
+
+The WIDER FACE dataset is a research benchmark dataset.
+
+The dataset images and original annotations are **not included directly in this repository**.
+
+Users should obtain the dataset through an appropriate authorized source and comply with the original dataset terms and conditions.
+
+---
+
+# 2. RAF-DB — Emotion Classification Dataset
+
+The CNN classification stage uses the **Real-world Affective Faces Database (RAF-DB)**.
 
 RAF-DB contains facial images with emotion annotations and includes significant variation in:
 
@@ -159,7 +391,9 @@ RAF-DB contains facial images with emotion annotations and includes significant 
 
 The dataset used in this project contains approximately **15,000 images**.
 
-### Emotion Classes
+---
+
+## Emotion Classes
 
 The current classification task uses seven basic emotion classes:
 
@@ -178,15 +412,15 @@ The CSV annotation files contain the image filename and corresponding numerical 
 Example:
 
 ```text
-image                  label
-train_00001_aligned.jpg    5
-train_00002_aligned.jpg    5
-train_00003_aligned.jpg    4
+image                     label
+train_00001_aligned.jpg      5
+train_00002_aligned.jpg      5
+train_00003_aligned.jpg      4
 ```
 
 ---
 
-## ⚠️ Dataset License
+## ⚠️ RAF-DB Dataset License
 
 RAF-DB is provided for **non-commercial research purposes**.
 
@@ -196,7 +430,7 @@ Users should obtain the dataset through an appropriate authorized source and com
 
 ---
 
-# 🗂️ Dataset Structure
+# 🗂️ RAF-DB Dataset Structure
 
 The dataset used during development follows this structure:
 
@@ -232,85 +466,104 @@ The actual images are stored separately inside the `train` and `test` directorie
 
 ---
 
-# 🧪 Current Development Stage
+# 🧪 Current Development Status
 
-The project is currently at the **CNN emotion classification stage**.
-
-Two pretrained CNN architectures have been investigated:
-
-* MobileNetV2
-* EfficientNetB0
-
-For each architecture, two experiments were performed:
-
-1. Base pretrained model with frozen feature extractor
-2. Fine-tuned model with selected pretrained layers unfrozen
-
-This resulted in four evaluated models:
+Both major model-development stages have been completed independently.
 
 ```text
-MobileNetV2
-├── Base
-└── Fine-Tuned
-
-EfficientNetB0
-├── Base
-└── Fine-Tuned
+                    Project
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+    Face Detection           Emotion Classification
+          │                         │
+          ▼                         ▼
+    WIDER FACE                  RAF-DB
+          │                         │
+          ▼                         ▼
+       YOLO                    CNN Models
+          │                         │
+          ▼                         ▼
+     COMPLETED                  COMPLETED
+          │                         │
+          └────────────┬────────────┘
+                       ▼
+               Integration Stage
+                       │
+                       ▼
+                  IN PROGRESS
 ```
 
 ---
 
-# 🔄 CNN Training Workflow
+# 🔄 Complete Development Workflow
 
-The current workflow is:
+The complete project workflow is:
 
 ```text
-RAF-DB
-   │
-   ▼
-Load train/test CSV files
-   │
-   ▼
-Construct image paths
-   │
-   ▼
-Analyze class distribution
-   │
-   ▼
-Class balancing / oversampling
-   │
-   ▼
-Image augmentation
-   │
-   ▼
-Training / Validation split
-   │
-   ├───────────────────────┐
-   ▼                       ▼
-MobileNetV2             EfficientNetB0
-   │                       │
-   ├── Base                ├── Base
-   │                       │
-   └── Fine-Tuned          └── Fine-Tuned
-   │                       │
-   └──────────┬────────────┘
-              ▼
-       Model Evaluation
-              │
-              ▼
- Accuracy / Precision /
- Recall / F1 / Confusion Matrix
-              │
-              ▼
-       Model Comparison
-              │
-              ▼
-       Best CNN Model
+                    WIDER FACE
+                        │
+                        ▼
+              Convert Annotations
+                  to YOLO Format
+                        │
+                        ▼
+                Train YOLO Model
+                        │
+                        ▼
+              Face Detection Model
+                        │
+                        │
+                        │
+                    RAF-DB
+                        │
+                        ▼
+             Image Preprocessing
+                        │
+                        ▼
+               Class Balancing
+                        │
+                        ▼
+                Data Augmentation
+                        │
+                        ▼
+             CNN Model Training
+                        │
+             ┌──────────┴──────────┐
+             ▼                     ▼
+        MobileNetV2          EfficientNetB0
+             │                     │
+             ▼                     ▼
+        Fine-Tuning            Fine-Tuning
+             │                     │
+             └──────────┬──────────┘
+                        ▼
+                 Model Evaluation
+                        │
+                        ▼
+              Select Best CNN Model
+                        │
+                        ▼
+               MobileNetV2 Fine-Tuned
+                        │
+                        │
+              ┌─────────┴─────────┐
+              │                   │
+              ▼                   ▼
+         YOLO Detector       CNN Classifier
+              │                   │
+              └─────────┬─────────┘
+                        ▼
+                Real-Time Pipeline
+                        │
+                        ▼
+                Webcam / Video
 ```
 
 ---
 
-# ⚖️ Class Imbalance
+# ⚖️ RAF-DB Class Imbalance
 
 RAF-DB has a significant class imbalance.
 
@@ -334,7 +587,7 @@ The original test distribution is retained for evaluation so that model performa
 
 ---
 
-# 🏗️ Models
+# 🏗️ Emotion Classification Models
 
 ## 1. MobileNetV2
 
@@ -349,7 +602,9 @@ This makes it particularly relevant to the eventual real-time video application.
 
 Two experiments were performed.
 
-### Base MobileNetV2
+---
+
+## Base MobileNetV2
 
 The ImageNet-pretrained feature extractor was frozen and a new classification head was trained.
 
@@ -373,7 +628,9 @@ Dense Layer
 7 Emotion Classes
 ```
 
-### Fine-Tuned MobileNetV2
+---
+
+## Fine-Tuned MobileNetV2
 
 Selected deeper layers of MobileNetV2 were unfrozen and trained with a smaller learning rate.
 
@@ -401,7 +658,7 @@ EfficientNetB0 provides efficient feature extraction and was included to determi
 
 # 📊 Experimental Results
 
-The four models were evaluated on the RAF-DB test set.
+The four emotion classification models were evaluated on the RAF-DB test set.
 
 The primary model-selection metric is **Macro F1-score**, because the dataset is class-imbalanced.
 
@@ -537,12 +794,12 @@ Weighted F1    : 0.5047
 
 ---
 
-# 🥇 Current Best Model
+# 🥇 Current Best Emotion Classifier
 
 Based on the current experiments:
 
 ```text
-BEST MODEL:
+BEST EMOTION CLASSIFIER:
 MobileNetV2 Fine-Tuned
 
 Selection Criterion:
@@ -557,13 +814,79 @@ Macro F1 : 53.00%
 Loss     : 1.0722
 ```
 
-Therefore, **MobileNetV2 Fine-Tuned is currently selected as the CNN emotion classifier for the next stage of the project.**
+Therefore, **MobileNetV2 Fine-Tuned is currently selected as the CNN emotion classifier for the final integration stage.**
+
+---
+
+# 🤖 YOLO Face Detection
+
+The YOLO face detection component has been completed.
+
+The development process included:
+
+```text
+WIDER FACE Dataset
+       │
+       ▼
+WIDER FACE Annotations
+       │
+       ▼
+Convert to YOLO Format
+       │
+       ▼
+YOLO Dataset
+       │
+       ▼
+YOLO Training
+       │
+       ▼
+Face Detection
+       │
+       ▼
+Detection Visualization
+```
+
+The detector uses:
+
+```text
+Class 0 → face
+```
+
+The model has been tested on images containing:
+
+* Single faces
+* Multiple faces
+* Crowded scenes
+* Small faces
+* Different poses
+* Different environments
+* Complex backgrounds
+
+Example detection output:
+
+```text
+┌──────────────────────────────────────────┐
+│                                          │
+│    ┌────────┐          ┌────────┐       │
+│    │  face  │          │  face  │       │
+│    │  0.9   │          │  0.8   │       │
+│    └────────┘          └────────┘       │
+│                                          │
+│              ┌────────┐                  │
+│              │  face  │                  │
+│              │  0.7   │                  │
+│              └────────┘                  │
+│                                          │
+└──────────────────────────────────────────┘
+```
+
+The YOLO stage is therefore considered **completed**.
 
 ---
 
 # 📈 Training Curves
 
-Training and validation accuracy/loss curves were generated for all four experiments.
+Training and validation accuracy/loss curves were generated for the CNN experiments.
 
 The curves are used to analyze:
 
@@ -580,7 +903,7 @@ The complete curves are available in the `cnn_model.ipynb` notebook and results 
 
 # 📊 Confusion Matrix Analysis
 
-Confusion matrices were generated for all four models.
+Confusion matrices were generated for the four CNN emotion classification models.
 
 They provide class-level information that cannot be observed from accuracy alone.
 
@@ -638,11 +961,30 @@ Macro F1 = 0.4181
 
 MobileNetV2 therefore provides the strongest current classification performance.
 
-It is also an attractive candidate for the eventual real-time application because of its lightweight architecture.
+It is also an attractive candidate for the real-time application because of its lightweight architecture.
 
 ---
 
-## 4. The Problem Is Not Solved Yet
+## 4. YOLO Face Detection Has Been Completed
+
+The face detection stage has been successfully developed using WIDER FACE.
+
+The detector is capable of identifying multiple faces in complex real-world scenes.
+
+The current YOLO output demonstrates detections such as:
+
+```text
+face 0.9
+face 0.8
+face 0.7
+face 0.5
+```
+
+The next challenge is no longer face detection itself, but connecting the detected face regions to the emotion classification model.
+
+---
+
+## 5. The Emotion Classification Problem Is Not Fully Solved Yet
 
 A 61.11% test accuracy and 0.53 Macro F1 are useful intermediate results, but they are **not considered the final performance target** for this project.
 
@@ -655,13 +997,17 @@ Disgust Recall = 0.4437
 Disgust F1     = 0.3054
 ```
 
-Further improvement is required before deploying the classifier in a real-time system.
+Further improvement may be investigated during later iterations.
 
 ---
 
 # 🚧 Remaining Work
 
-The current repository represents an intermediate milestone rather than the completed project.
+The two individual deep learning components have been completed.
+
+The remaining work focuses mainly on **integration and real-time deployment**.
+
+---
 
 ## Phase 1 — CNN Emotion Classification
 
@@ -685,48 +1031,58 @@ The current repository represents an intermediate milestone rather than the comp
 
 ## Phase 2 — Face Detection
 
-**Status: ⏳ Not Started**
+**Status: ✅ Completed**
 
-The next stage is to integrate a YOLO-based face detector.
+* [x] Obtain WIDER FACE dataset
+* [x] Identify WIDER FACE image structure
+* [x] Process WIDER FACE annotations
+* [x] Convert annotations to YOLO format
+* [x] Prepare YOLO training dataset
+* [x] Prepare YOLO validation dataset
+* [x] Train YOLO face detector
+* [x] Test face detection
+* [x] Generate detection visualizations
+* [x] Verify multiple-face detection
+
+---
+
+## Phase 3 — YOLO + CNN Integration
+
+**Status: ⏳ Next Major Step**
+
+The selected MobileNetV2 emotion classifier will be connected to the completed YOLO face detector.
 
 Planned workflow:
 
 ```text
-Video Frame
+Input Frame
      │
      ▼
-YOLO Face Detection
+YOLO Face Detector
      │
      ▼
 Face Bounding Boxes
      │
-     ▼
-Crop Individual Faces
-```
-
----
-
-## Phase 3 — CNN + YOLO Integration
-
-**Status: ⏳ Pending**
-
-The selected MobileNetV2 emotion classifier will be connected to the YOLO face detector.
-
-```text
-                 Video Frame
-                      │
-                      ▼
-                YOLO Detector
-                      │
-             ┌────────┴────────┐
-             ▼                 ▼
-          Face 1             Face 2
-             │                 │
-             ▼                 ▼
-       MobileNetV2       MobileNetV2
-             │                 │
-             ▼                 ▼
-          Happy              Sad
+     ├───────────────┐
+     │               │
+     ▼               ▼
+   Face 1          Face 2
+     │               │
+     ▼               ▼
+ Crop Face        Crop Face
+     │               │
+     ▼               ▼
+ Preprocess       Preprocess
+     │               │
+     ▼               ▼
+MobileNetV2      MobileNetV2
+     │               │
+     ▼               ▼
+  Emotion          Emotion
+     │               │
+     └───────┬───────┘
+             ▼
+       Annotated Frame
 ```
 
 ---
@@ -739,15 +1095,16 @@ The final application will process webcam/video input frame-by-frame.
 
 Planned features:
 
-* Real-time face detection
-* Multiple-face detection
-* Emotion classification
-* Confidence scores
-* Bounding boxes
-* Emotion labels
-* FPS monitoring
-* Webcam support
-* Video-file support
+* [ ] Real-time face detection
+* [ ] Multiple-face detection
+* [ ] Face cropping
+* [ ] Emotion classification
+* [ ] Confidence scores
+* [ ] Bounding boxes
+* [ ] Emotion labels
+* [ ] FPS monitoring
+* [ ] Webcam support
+* [ ] Video-file support
 
 ---
 
@@ -796,25 +1153,31 @@ This is especially important for a practical real-time emotion detection system.
 * CNN
 * Transfer Learning
 * Fine-Tuning
+* YOLO
 
 ### Computer Vision
 
 * OpenCV
 * YOLO
 * Image preprocessing
+* Face detection
 * Real-time video processing
 
 ### Models
 
-Current:
+Completed:
 
+* YOLO-based Face Detector
 * MobileNetV2
 * EfficientNetB0
 
+Selected:
+
+* Fine-Tuned MobileNetV2 for emotion classification
+
 Planned:
 
-* YOLO-based face detector
-* Fine-tuned MobileNetV2 emotion classifier
+* YOLO + MobileNetV2 integrated pipeline
 
 ### Data Processing
 
@@ -832,7 +1195,7 @@ Planned:
 
 # 📁 Repository Structure
 
-The repository is currently organized around the CNN development stage.
+The repository is organized around the completed face detection and emotion classification stages.
 
 Recommended structure:
 
@@ -842,7 +1205,8 @@ Real-Time-Video-Emotion-Detection/
 ├── README.md
 │
 ├── notebooks/
-│   └── cnn-model.ipynb
+│   ├── cnn-model.ipynb
+│   └── yolo-face-detection.ipynb
 │
 ├── results/
 │   ├── mobilenetv2_base_confusion_matrix.png
@@ -878,17 +1242,15 @@ src/
     └── video_emotion_detection.py
 ```
 
+> The exact filenames may change as the integration stage is developed.
+
 ---
 
-# 📓 Current Notebook
+# 📓 Current Notebooks
 
-The current experimental implementation is available in:
+## CNN Emotion Classification
 
-```text
-notebooks/cnn-model.ipynb
-```
-
-The notebook contains:
+The CNN experimental implementation contains:
 
 * Dataset loading
 * Image path construction
@@ -910,25 +1272,77 @@ The notebook contains:
 
 ---
 
+## YOLO Face Detection
+
+The YOLO development stage contains:
+
+* WIDER FACE dataset loading
+* WIDER FACE annotation processing
+* YOLO annotation conversion
+* Training dataset preparation
+* Validation dataset preparation
+* YOLO model training
+* Face detection
+* Detection visualization
+* Multiple-face detection
+
+---
+
 # 📸 Results
 
-Selected model evaluation results are included in the `assets/` directory.
+The repository contains visual results from both major model-development stages.
+
+### YOLO Face Detection
+
+Example results demonstrate face detection across different WIDER FACE scenes, including:
+
+* Interviews
+* Parades
+* Medical scenes
+* Swimming
+* Group activities
+* Car accidents
+* Military scenes
+* Workers
+* News broadcasts
+* Sports
+* Spa scenes
+* Group photographs
+
+Detected faces are displayed using bounding boxes and confidence scores.
+
+Example:
+
+```text
+face 0.9
+face 0.8
+face 0.7
+face 0.5
+```
+
+---
 
 ### MobileNetV2 Base
 
-![MobileNetV2 Base Confusion Matrix](results/mobilenetv2_base_confusion_matrix.png)
+CNN classification results include the corresponding classification report and confusion matrix.
+
+---
 
 ### MobileNetV2 Fine-Tuned
 
-![MobileNetV2 Fine-Tuned Confusion Matrix](results/mobilenetv2_finetuned_confusion_matrix.png)
+CNN classification results include the corresponding classification report and confusion matrix.
+
+---
 
 ### EfficientNetB0 Base
 
-![EfficientNetB0 Base Confusion Matrix](results/efficientnetb0_base_confusion_matrix.png)
+CNN classification results include the corresponding classification report and confusion matrix.
+
+---
 
 ### EfficientNetB0 Fine-Tuned
 
-![EfficientNetB0 Fine-Tuned Confusion Matrix](results/efficientnetb0_finetuned_confusion_matrix.png)
+CNN classification results include the corresponding classification report and confusion matrix.
 
 ---
 
@@ -936,7 +1350,8 @@ Selected model evaluation results are included in the `assets/` directory.
 
 The following improvements will be investigated in future iterations:
 
-* [ ] YOLO-based face detection
+* [x] YOLO-based face detection
+* [ ] YOLO + MobileNetV2 integration
 * [ ] Real-time webcam emotion detection
 * [ ] Multiple-face emotion detection
 * [ ] Temporal prediction smoothing
@@ -954,6 +1369,50 @@ The following improvements will be investigated in future iterations:
 
 ---
 
+# 🎯 Next Major Step
+
+The next development milestone is to integrate the two completed components:
+
+```text
+                ┌──────────────────────┐
+                │   Webcam / Video     │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │  YOLO Face Detector  │
+                │      ✅ READY        │
+                └──────────┬───────────┘
+                           │
+                     Face Bounding Box
+                           │
+                           ▼
+                    Crop Face Region
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │ Fine-Tuned           │
+                │ MobileNetV2          │
+                │      ✅ READY        │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │ Emotion Prediction   │
+                │ + Confidence Score   │
+                └──────────┬───────────┘
+                           │
+                           ▼
+                ┌──────────────────────┐
+                │ Annotated Video      │
+                │ Frame                │
+                └──────────────────────┘
+```
+
+This integration will transform the two independently developed models into a complete **real-time facial emotion detection system**.
+
+---
+
 # 🎯 Final Goal
 
 The ultimate goal of this project is to build an end-to-end real-time facial emotion detection system:
@@ -968,6 +1427,7 @@ The ultimate goal of this project is to build an end-to-end real-time facial emo
                     ┌─────────────────┐
                     │ YOLO Face       │
                     │ Detection       │
+                    │     ✅ Ready    │
                     └────────┬────────┘
                              │
                        Face Crops
@@ -976,6 +1436,7 @@ The ultimate goal of this project is to build an end-to-end real-time facial emo
                     ┌─────────────────┐
                     │ Fine-Tuned      │
                     │ MobileNetV2     │
+                    │     ✅ Ready    │
                     └────────┬────────┘
                              │
                              ▼
@@ -991,27 +1452,32 @@ The ultimate goal of this project is to build an end-to-end real-time facial emo
                     └─────────────────┘
 ```
 
-The current CNN experiments establish the **emotion classification component** of this pipeline.
+The **YOLO face detection component** and **CNN emotion classification component** have been developed successfully.
 
-The next major milestone is integrating the selected **MobileNetV2 classifier with YOLO-based face detection** to create the complete real-time video system.
+The remaining task is to integrate them into a unified real-time video pipeline.
 
 ---
 
 # 📌 Current Status
 
 ```text
-CNN Emotion Classification      ████████████████████  Completed
-Model Comparison                ████████████████████  Completed
-Best Model Selection            ████████████████████  Completed
+WIDER FACE Dataset Preparation       ████████████████████  Completed
+YOLO Annotation Conversion           ████████████████████  Completed
+YOLO Face Detection                  ████████████████████  Completed
+YOLO Detection Testing               ████████████████████  Completed
 
-YOLO Face Detection             ░░░░░░░░░░░░░░░░░░░░  Pending
-YOLO + CNN Integration          ░░░░░░░░░░░░░░░░░░░░  Pending
-Real-Time Video Processing      ░░░░░░░░░░░░░░░░░░░░  Pending
-Temporal Smoothing              ░░░░░░░░░░░░░░░░░░░░  Pending
-Deployment                      ░░░░░░░░░░░░░░░░░░░░  Pending
+RAF-DB Dataset Preparation            ████████████████████  Completed
+CNN Emotion Classification            ████████████████████  Completed
+Model Comparison                     ████████████████████  Completed
+Best CNN Model Selection              ████████████████████  Completed
+
+YOLO + CNN Integration                ░░░░░░░░░░░░░░░░░░░░  Pending
+Real-Time Video Processing            ░░░░░░░░░░░░░░░░░░░░  Pending
+Temporal Smoothing                    ░░░░░░░░░░░░░░░░░░░░  Pending
+Deployment                            ░░░░░░░░░░░░░░░░░░░░  Pending
 ```
 
-> This repository is actively under development. The current results represent the CNN classification milestone of the larger real-time video emotion detection project.
+> This repository is actively under development. The current milestone includes both the **YOLO-based face detection system** and the **CNN-based emotion classification system**. The next milestone is their integration into a complete real-time video emotion detection pipeline.
 
 ```
 ```
