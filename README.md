@@ -4,11 +4,13 @@ A deep learning project for detecting human emotions from real-time video.
 
 The system combines **YOLO-based face detection** with a **CNN-based facial emotion classifier** to detect faces in video frames and classify their emotional state in real time.
 
-> **Project Status: 🚧 In Progress**
+> **Project Status: ✅ End-to-End Prototype Completed**
 >
-> The **YOLO-based face detection stage** and the **CNN-based facial emotion classification stage** have been completed independently.
+> The **YOLO-based face detection**, **CNN-based facial emotion classification**, and **YOLO + MobileNetV2 real-time video integration** have been successfully implemented.
 >
-> The remaining major task is to integrate both models into a single real-time video emotion detection pipeline.
+> The current system can detect multiple faces in video frames, crop the detected faces, classify their emotions using the fine-tuned MobileNetV2 model, and display the predicted emotion and confidence score directly on the video.
+>
+> Further improvements such as temporal smoothing, inference optimization, FPS benchmarking, and deployment remain as future work.
 
 ---
 
