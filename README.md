@@ -1508,9 +1508,6 @@ The remaining task is to integrate them into a unified real-time video pipeline.
 
 # 📌 Current Status
 
-```markdown
-# 📌 Current Status
-
 ```text
 WIDER FACE Dataset Preparation        ████████████████████  Completed
 YOLO Annotation Conversion            ████████████████████  Completed
