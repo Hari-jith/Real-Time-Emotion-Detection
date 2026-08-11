@@ -1,5 +1,13 @@
 # Real-Time Video Emotion Detection
 
+> **End-to-end computer vision pipeline combining YOLO face detection with fine-tuned MobileNetV2 facial emotion classification for video input.**
+
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
+![YOLO](https://img.shields.io/badge/YOLO-Face%20Detection-green)
+![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-red)
+![Status](https://img.shields.io/badge/Status-Working%20Prototype-success)
+
 A deep learning project for detecting human emotions from real-time video.
 
 The system combines **YOLO-based face detection** with a **CNN-based facial emotion classifier** to detect faces in video frames and classify their emotional state in real time.
@@ -55,9 +63,11 @@ The planned end-to-end pipeline is:
                   └─────────────────┘
 ````
 
-Both individual components have now been developed.
+Both individual components have been developed and successfully integrated into an end-to-end video processing pipeline.
 
-The next step is to connect the YOLO face detector with the selected CNN emotion classifier.
+The final prototype connects the YOLO face detector with the selected fine-tuned MobileNetV2 emotion classifier. For each video frame, YOLO identifies faces, the detected face regions are cropped and preprocessed, and MobileNetV2 predicts the corresponding emotion.
+
+The resulting bounding boxes, emotion labels, and confidence scores are displayed directly on the video.
 
 ---
 
@@ -494,7 +504,7 @@ Both major model-development stages have been completed independently.
                Integration Stage
                        │
                        ▼
-                  IN PROGRESS
+                  PARTIALLY COMPLETED
 ```
 
 ---
@@ -1048,13 +1058,17 @@ The remaining work focuses mainly on **integration and real-time deployment**.
 
 ---
 
-## Phase 3 — YOLO + CNN Integration
+## Phase 3 — YOLO + MobileNetV2 Integration
 
-**Status: ⏳ Next Major Step**
+The two independently developed components have been successfully integrated into a single video-based emotion detection pipeline.
 
-The selected MobileNetV2 emotion classifier will be connected to the completed YOLO face detector.
+The system combines:
 
-Planned workflow:
+YOLO Face Detector
+        +
+Fine-Tuned MobileNetV2
+        ↓
+Real-Time Video Emotion Detection
 
 ```text
 Input Frame
@@ -1085,6 +1099,38 @@ MobileNetV2      MobileNetV2
      └───────┬───────┘
              ▼
        Annotated Frame
+```
+
+``` text
+
+                 Video Frame
+                      │
+                      ▼
+              ┌───────────────┐
+              │ YOLO Detector │
+              └───────┬───────┘
+                      │
+              Face Bounding Boxes
+                      │
+          ┌───────────┼───────────┐
+          ▼           ▼           ▼
+       Face 1      Face 2      Face N
+          │           │           │
+          ▼           ▼           ▼
+       Crop        Crop        Crop
+          │           │           │
+          ▼           ▼           ▼
+    Preprocess   Preprocess   Preprocess
+          │           │           │
+          ▼           ▼           ▼
+     MobileNetV2  MobileNetV2  MobileNetV2
+          │           │           │
+          ▼           ▼           ▼
+      Emotion     Emotion     Emotion
+          │           │           │
+          └───────────┼───────────┘
+                      ▼
+              Annotated Frame
 ```
 
 ---
@@ -1353,7 +1399,7 @@ CNN classification results include the corresponding classification report and c
 The following improvements will be investigated in future iterations:
 
 * [x] YOLO-based face detection
-* [ ] YOLO + MobileNetV2 integration
+* [x] YOLO + MobileNetV2 integration
 * [ ] Real-time webcam emotion detection
 * [ ] Multiple-face emotion detection
 * [ ] Temporal prediction smoothing
@@ -1462,24 +1508,29 @@ The remaining task is to integrate them into a unified real-time video pipeline.
 
 # 📌 Current Status
 
+```markdown
+# 📌 Current Status
+
 ```text
-WIDER FACE Dataset Preparation       ████████████████████  Completed
-YOLO Annotation Conversion           ████████████████████  Completed
-YOLO Face Detection                  ████████████████████  Completed
-YOLO Detection Testing               ████████████████████  Completed
+WIDER FACE Dataset Preparation        ████████████████████  Completed
+YOLO Annotation Conversion            ████████████████████  Completed
+YOLO Face Detection                   ████████████████████  Completed
+YOLO Detection Testing                ████████████████████  Completed
 
-RAF-DB Dataset Preparation            ████████████████████  Completed
-CNN Emotion Classification            ████████████████████  Completed
-Model Comparison                     ████████████████████  Completed
-Best CNN Model Selection              ████████████████████  Completed
+RAF-DB Dataset Preparation             ████████████████████  Completed
+CNN Emotion Classification             ████████████████████  Completed
+Model Comparison                      ████████████████████  Completed
+Best CNN Model Selection               ████████████████████  Completed
 
-YOLO + CNN Integration                ░░░░░░░░░░░░░░░░░░░░  Pending
-Real-Time Video Processing            ░░░░░░░░░░░░░░░░░░░░  Pending
-Temporal Smoothing                    ░░░░░░░░░░░░░░░░░░░░  Pending
-Deployment                            ░░░░░░░░░░░░░░░░░░░░  Pending
-```
+YOLO + MobileNetV2 Integration         ████████████████████  Completed
+Video Emotion Detection                ████████████████████  Working
+Multiple-Face Processing               ████████████████████  Working
+
+Temporal Smoothing                     ░░░░░░░░░░░░░░░░░░░░  Planned
+FPS Optimization                       ░░░░░░░░░░░░░░░░░░░░  Planned
+Webcam Deployment                      ░░░░░░░░░░░░░░░░░░░░  Planned
+Application Deployment                 ░░░░░░░░░░░░░░░░░░░░  Planned
 
 > This repository is actively under development. The current milestone includes both the **YOLO-based face detection system** and the **CNN-based emotion classification system**. The next milestone is their integration into a complete real-time video emotion detection pipeline.
 
-```
 ```
