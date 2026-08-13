@@ -1,5 +1,11 @@
 # Real-Time Video-Based Emotion Detection
 
+![Python](https://img.shields.io/badge/Python-3.x-blue)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-orange)
+![YOLO](https://img.shields.io/badge/YOLO-Face%20Detection-green)
+![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-red)
+![Status](https://img.shields.io/badge/Status-Working%20Prototype-success)
+
 A deep learning pipeline for **real-time human emotion detection from
 images, videos, and webcam streams**.
 
