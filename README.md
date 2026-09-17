@@ -1,96 +1,97 @@
 # Real-Time Video-Based Facial Emotion Detection
 
-A deep learning pipeline for **real-time facial emotion detection from images, videos, and webcam streams**.
+A deep learning system for **real-time facial emotion detection from video and webcam streams**, combining YOLO-based face detection with CNN-based emotion classification.
 
-The system combines two independent computer vision stages:
+The system consists of two separate computer vision stages:
 
-1. **YOLO face detection** — detects and localizes human faces in an image or video frame.
-2. **CNN-based emotion classification** — classifies each detected face into one of eight facial emotion categories.
+1. **YOLO face detection** — detects and localizes human faces in each frame.
+2. **CNN emotion classification** — classifies each detected face into one of eight emotion categories.
 
-The face-detection component uses a YOLO model trained on WIDER FACE, while the emotion-classification component has been rebuilt using the **AffectNet dataset** and evaluated using three transfer-learning CNN architectures:
+The face detector was trained using **WIDER FACE**, while the emotion classifier was trained using an **AffectNet-derived dataset** and evaluated with three transfer-learning CNN architectures:
 
 - MobileNetV2
 - DenseNet121
 - ResNet50
 
-The three models are trained independently, evaluated on the held-out test set, and compared using multiple classification metrics. The best-performing model is then fine-tuned separately. Based on the current evaluation, **fine-tuned ResNet50 is the final emotion classification model**.
+After comparing the baseline models, ResNet50 was selected for fine-tuning. The resulting fine-tuned ResNet50 is used as the final emotion-classification model.
 
 ---
 
-## 1. Project Overview
+## Demo
+
+![Real-Time Facial Emotion Detection Demo](results/demo.gif)
+
+---
+
+## Project Overview
 
 The complete inference pipeline is:
 
 ```text
-Input Image / Video / Webcam
-           |
-           v
-     YOLO Face Detector
-           |
-           v
-    Face Bounding Boxes
-           |
-           v
-       Face Cropping
-           |
-           v
-     Image Preprocessing
-           |
-           v
-   ResNet50 Emotion Classifier
-           |
-           v
-    Emotion + Confidence
-           |
-           v
-      Annotated Output
+Input Video / Webcam
+        |
+        v
+YOLO Face Detector
+        |
+        v
+Face Bounding Boxes
+        |
+        v
+Face Cropping
+        |
+        v
+Image Preprocessing
+        |
+        v
+Fine-Tuned ResNet50
+        |
+        v
+Emotion + Confidence
+        |
+        v
+Annotated Output
 ````
 
 For every detected face, the system:
 
 * detects the face using YOLO,
 * extracts the corresponding face region,
-* resizes the cropped face,
-* passes it through the trained emotion classifier,
+* resizes the face to `224 × 224`,
+* passes it to the trained ResNet50 classifier,
 * predicts one of eight emotion classes,
 * calculates the prediction confidence,
-* displays the face bounding box and predicted emotion.
+* displays the bounding box, predicted emotion and confidence.
 
-The same overall pipeline can be used with:
-
-* individual images,
-* prerecorded videos,
-* real-time webcam streams.
+The YOLO detector is responsible **only for face detection**. It does not perform emotion classification.
 
 ---
 
-# 2. Key Features
+## Key Features
 
-* Real-time webcam-based facial emotion detection
+* Real-time webcam facial emotion detection
 * YOLO-based face detection
-* AffectNet-based emotion classification
-* Eight-class facial emotion recognition
-* Transfer learning using pretrained CNN architectures
-* Independent training of MobileNetV2, DenseNet121 and ResNet50
-* Validation-based comparison of CNN architectures
-* Class-weighted training for handling class imbalance
-* Slight image augmentation during training
-* Fine-tuning only the best-performing CNN
-* Classification report with precision, recall and F1-score
+* WIDER FACE-based face detector
+* AffectNet-derived emotion classification
+* Eight-class facial emotion classification
+* Transfer learning with MobileNetV2, DenseNet121 and ResNet50
+* Class-weighted training for class imbalance
+* Light image augmentation
+* Model comparison using multiple evaluation metrics
+* ResNet50 fine-tuning
+* Classification reports
 * Confusion matrix analysis
 * Multiclass ROC-AUC analysis
 * Per-class ROC-AUC evaluation
-* Model comparison
-* Random test-image predictions with confidence scores
+* Random test-image predictions
 * Threaded webcam and inference pipeline
 * Real-time FPS monitoring
-* Modular separation between face detection and emotion classification
+* Separate face detection and emotion classification stages
 
 ---
 
-# 3. Emotion Classes
+## Emotion Classes
 
-The emotion-classification component uses eight emotion categories from the AffectNet dataset.
+The emotion classifier predicts eight classes:
 
 | Class Index | Emotion  |
 | ----------: | -------- |
@@ -103,7 +104,7 @@ The emotion-classification component uses eight emotion categories from the Affe
 |           6 | Sad      |
 |           7 | Surprise |
 
-The CNN classifier uses the following fixed class order during training, evaluation and inference:
+The same class ordering is used during training, evaluation and inference.
 
 ```python
 CLASS_NAMES = [
@@ -118,17 +119,15 @@ CLASS_NAMES = [
 ]
 ```
 
-Keeping this ordering identical during training, evaluation and inference is essential because the output index of the softmax layer corresponds directly to this class mapping.
-
 ---
 
-# 4. Dataset
+## Dataset
 
-## AffectNet
+### Emotion Classification Dataset
 
-The emotion-classification stage uses an AffectNet-derived dataset organized into class-specific folders.
+The emotion-classification component uses an **AffectNet-derived dataset** organized into class-specific folders.
 
-The CNN training pipeline reads labels directly from the folder names and does not use `labels.csv`.
+Labels are read directly from the folder names. The `labels.csv` file included with the dataset is not used by the training pipeline.
 
 ```text
 Dataset/
@@ -155,13 +154,11 @@ Dataset/
 
 Folder-name capitalization is normalized during dataset loading.
 
-The `labels.csv` file present with the dataset is explicitly ignored.
-
 ### Dataset Distribution
 
-The original training and test distributions are:
+The dataset used in this experiment contains the following image counts.
 
-### Training Set
+#### Training Set
 
 | Emotion   |     Images |
 | --------- | ---------: |
@@ -175,7 +172,7 @@ The original training and test distributions are:
 | Surprise  |      2,119 |
 | **Total** | **16,108** |
 
-### Test Set
+#### Test Set
 
 | Emotion   |     Images |
 | --------- | ---------: |
@@ -189,38 +186,38 @@ The original training and test distributions are:
 | Surprise  |      1,920 |
 | **Total** | **14,518** |
 
-The original training set is split into training and validation subsets using a **stratified split**, while the original test set is kept separate for final evaluation.
+The original training set was split into **85% training and 15% validation** using a stratified split.
 
 ```text
 Original Training Data
         |
-        +------------------+
-        |                  |
-        v                  v
-    Training            Validation
-      85%                   15%
-        |
-        |
-        v
+        +----------------------+
+        |                      |
+        v                      v
+    Training              Validation
+       85%                    15%
+
 Original Test Data
         |
         v
-Final Independent Test
+Independent Test Evaluation
 ```
 
-The test set is not used for model selection or training.
+The validation set was used during training for callbacks such as early stopping, learning-rate scheduling and checkpointing.
+
+The test set was used for the reported model evaluation and comparison.
 
 ---
 
-# 5. Data Preprocessing
+## Data Preprocessing
 
-Images are resized to:
+All CNN models use:
 
 ```text
-224 × 224
+Image Size: 224 × 224
+Channels: 3
+Batch Size: 32
 ```
-
-The CNN models use three-channel input suitable for ImageNet-pretrained architectures.
 
 The preprocessing pipeline is:
 
@@ -246,26 +243,30 @@ Model-Specific Preprocessing
 CNN Backbone
 ```
 
-Light augmentation is applied during training to improve generalization.
+Light augmentation is applied during training:
 
-The augmentation pipeline uses controlled transformations such as:
+* Horizontal flipping
+* Random rotation
+* Random zoom
+* Random contrast
 
-* horizontal flipping,
-* slight rotation,
-* slight zoom,
-* slight contrast variation.
+The augmentation configuration uses:
 
-Augmentation is applied only during model training and is disabled during evaluation and inference.
+```text
+RandomRotation: 0.05
+RandomZoom:     0.10
+RandomContrast: 0.10
+```
+
+Augmentation is enabled during training and disabled during evaluation and inference.
 
 ---
 
-# 6. Class Imbalance Handling
+## Class Imbalance Handling
 
-The AffectNet training data is not perfectly balanced.
+The training data is not perfectly balanced across the eight emotion classes.
 
-Class weights were calculated from the training distribution and supplied to the CNN training process.
-
-The calculated weights are:
+Class weights were calculated from the training distribution and supplied during model training.
 
 | Emotion  | Class Weight |
 | -------- | -----------: |
@@ -278,121 +279,59 @@ The calculated weights are:
 | Sad      |        0.651 |
 | Surprise |        0.950 |
 
-Higher weights are assigned to classes with fewer training samples, allowing the loss function to penalize mistakes on those classes more strongly.
-
-This helps prevent the classifier from being dominated by the more frequently represented emotions.
+Higher weights are assigned to classes with fewer training samples so that errors on those classes contribute more strongly to the training loss.
 
 ---
 
-# 7. Face Detection Component
+## Face Detection with YOLO
 
-The face-detection stage remains separate from the emotion-classification stage.
+The face-detection component is independent of the emotion-classification model.
 
-## Dataset
+### Dataset
 
 The YOLO face detector was trained using **WIDER FACE**.
 
-The WIDER FACE annotations were converted into YOLO-compatible format for training.
+The WIDER FACE annotations were converted into YOLO-compatible format.
 
-The detector uses a single object class:
+The detector contains a single class:
 
 ```text
 0 → face
 ```
 
-The original YOLO workflow processed approximately **12,880 training images**.
+Approximately **12,880 training images** were processed for the YOLO training workflow.
 
-The purpose of the YOLO model is strictly face localization.
+The YOLO model is used strictly for:
+
+```text
+Face Detection
+      ↓
+Bounding Boxes
+      ↓
+Face Cropping
+```
 
 It does **not** classify emotions.
 
----
-
-# 8. YOLO Face Detection Workflow
-
-For each input frame:
-
-```text
-Input Frame
-     |
-     v
-YOLO Face Detector
-     |
-     +---- Face 1 Bounding Box
-     |
-     +---- Face 2 Bounding Box
-     |
-     +---- Face 3 Bounding Box
-              |
-              v
-        Crop Each Face
-```
-
-The detected face regions are then passed to the CNN emotion-classification model.
-
-The trained YOLO model is:
+The trained model is:
 
 ```text
 yolo_face_detector_best.pt
 ```
 
-The YOLO model therefore acts as the front-end detector while the CNN performs emotion classification.
-
 ---
 
-# 9. CNN Emotion Classification
+## CNN Emotion Classification
 
-Three CNN architectures were trained and evaluated independently:
+Three transfer-learning CNN architectures were trained independently:
 
 * MobileNetV2
 * DenseNet121
 * ResNet50
 
-All three models use ImageNet-pretrained backbones and a common emotion-classification framework.
+All three use ImageNet-pretrained backbones.
 
-The models are initially trained with their pretrained backbones frozen.
-
-After all three models have been evaluated, the best-performing architecture is selected.
-
-Only that selected model is then fine-tuned.
-
-```text
-AffectNet
-    |
-    v
-Training / Validation / Test
-    |
-    +------------------+------------------+
-    |                  |                  |
-    v                  v                  v
-MobileNetV2        DenseNet121        ResNet50
-    |                  |                  |
-    v                  v                  v
-Evaluation          Evaluation        Evaluation
-    |                  |                  |
-    +------------------+------------------+
-                       |
-                       v
-                Model Comparison
-                       |
-                       v
-                 Best Base Model
-                       |
-                       v
-                  Fine-Tuning
-                       |
-                       v
-                Final Evaluation
-                       |
-                       v
-                Final CNN Model
-```
-
----
-
-# 10. CNN Architecture
-
-The three CNN models follow the same general classification-head design.
+The general classification architecture is:
 
 ```text
 Input Image
@@ -416,38 +355,35 @@ Global Average Pooling
 Batch Normalization
      |
      v
-Dropout
+Dropout (0.35)
      |
      v
-Dense Layer - 256 Units
+Dense Layer (256, ReLU)
      |
      v
 Batch Normalization
      |
      v
-Dropout
+Dropout (0.30)
      |
      v
-Softmax Output
+Softmax
      |
      v
 8 Emotion Classes
 ```
 
+The CNN backbones were initially frozen for baseline training.
+
+Each model was trained independently and evaluated using multiple metrics.
+
 ---
 
-# 11. MobileNetV2
+# Model Results
 
-MobileNetV2 is a lightweight convolutional architecture designed for computational efficiency.
+## MobileNetV2
 
-Its main advantages include:
-
-* lower computational requirements,
-* relatively fast inference,
-* smaller architecture compared with heavier CNNs,
-* suitability for real-time applications.
-
-MobileNetV2 was used as the lightweight baseline in this project.
+MobileNetV2 was used as the lightweight baseline.
 
 ### Test Performance
 
@@ -461,18 +397,23 @@ Weighted F1:     48.52%
 Macro ROC-AUC:   0.8461
 ```
 
+### Training Curves
+
+![MobileNetV2 Training Curves](results/CNN/mobilenet_training_curves.png)
+
+### Confusion Matrix
+
+![MobileNetV2 Confusion Matrix](results/CNN/mobilenet_confusion_matrix.png)
+
+### ROC-AUC
+
+![MobileNetV2 ROC-AUC](results/CNN/mobilenet_roc_auc.png)
+
 ---
 
-# 12. DenseNet121
+## DenseNet121
 
-DenseNet121 uses dense connections between convolutional layers, allowing feature information to be reused throughout the network.
-
-Its characteristics include:
-
-* feature reuse,
-* efficient gradient propagation,
-* strong feature representation,
-* relatively deep architecture.
+DenseNet121 was evaluated using the same classification framework.
 
 ### Test Performance
 
@@ -486,24 +427,25 @@ Weighted F1:     50.94%
 Macro ROC-AUC:   0.8598
 ```
 
-DenseNet121 performed better than MobileNetV2 on the overall classification metrics.
+### Training Curves
+
+![DenseNet121 Training Curves](results/CNN/densenet_training_curves.png)
+
+### Confusion Matrix
+
+![DenseNet121 Confusion Matrix](results/CNN/densenet_confusion_matrix.png)
+
+### ROC-AUC
+
+![DenseNet121 ROC-AUC](results/CNN/densenet_roc_auc.png)
 
 ---
 
-# 13. ResNet50
+## ResNet50
 
-ResNet50 uses residual connections to make deeper neural networks easier to optimize.
+ResNet50 was evaluated as the third baseline architecture.
 
-Its characteristics include:
-
-* residual learning,
-* strong feature extraction,
-* deep feature representation,
-* effective transfer-learning performance.
-
-Among the three base models, ResNet50 produced the strongest overall results.
-
-### Base ResNet50 Test Performance
+### Base Test Performance
 
 ```text
 Test Loss:       1.3857
@@ -515,13 +457,23 @@ Weighted F1:     53.07%
 Macro ROC-AUC:   0.8657
 ```
 
-ResNet50 was therefore selected as the best base model for further fine-tuning.
+### Training Curves
+
+![ResNet50 Training Curves](results/CNN/resnet_training_curves.png)
+
+### Confusion Matrix
+
+![ResNet50 Confusion Matrix](results/CNN/resnet_confusion_matrix.png)
+
+### ROC-AUC
+
+![ResNet50 ROC-AUC](results/CNN/resnet_roc_auc.png)
 
 ---
 
-# 14. Model Comparison
+## Baseline Model Comparison
 
-The three CNN architectures were compared using multiple evaluation metrics rather than accuracy alone.
+The three CNN architectures were compared using accuracy, macro precision, macro recall, macro F1, weighted F1 and macro ROC-AUC.
 
 | Model        | Test Accuracy | Macro Precision | Macro Recall |   Macro F1 | Weighted F1 | Macro ROC-AUC |
 | ------------ | ------------: | --------------: | -----------: | ---------: | ----------: | ------------: |
@@ -529,99 +481,27 @@ The three CNN architectures were compared using multiple evaluation metrics rath
 | DenseNet121  |        52.04% |          49.25% |       49.04% |     47.66% |      50.94% |        0.8598 |
 | **ResNet50** |    **53.80%** |      **50.20%** |   **50.30%** | **49.73%** |  **53.07%** |    **0.8657** |
 
-ResNet50 achieved the strongest overall performance among the three base models.
-
-It was therefore selected for fine-tuning.
+ResNet50 had the highest reported baseline values across the comparison metrics and was selected for fine-tuning.
 
 ---
 
-# 15. Model Training Results
+# ResNet50 Fine-Tuning
 
-## MobileNetV2
+After the baseline comparison, selected ResNet50 backbone layers were unfrozen for further training.
 
-![MobileNetV2 Training Curves](results/CNN/MobileNetV2_training_curves.png)
-
-The training and validation curves are used to monitor:
-
-* convergence,
-* training progress,
-* potential overfitting,
-* potential underfitting,
-* differences between training and validation performance.
-
----
-
-## DenseNet121
-
-![DenseNet121 Training Curves](results/CNN/DenseNet121_training_curves.png)
-
-The same training and validation metrics are monitored for DenseNet121.
-
----
-
-## ResNet50
-
-![ResNet50 Training Curves](results/CNN/ResNet50_training_curves.png)
-
-ResNet50 was selected for further fine-tuning after comparing the independent baseline results.
-
----
-
-# 16. Confusion Matrix Analysis
-
-Confusion matrices are generated separately for all three baseline models.
-
-They provide a class-level view of the model's predictions and show which emotion categories are frequently confused with one another.
-
-## MobileNetV2
-
-![MobileNetV2 Confusion Matrix](results/CNN/MobileNetV2_confusion_matrix.png)
-
-## DenseNet121
-
-![DenseNet121 Confusion Matrix](results/CNN/DenseNet121_confusion_matrix.png)
-
-## ResNet50
-
-![ResNet50 Confusion Matrix](results/CNN/ResNet50_confusion_matrix.png)
-
-The confusion matrices are particularly useful for identifying classes that are difficult to distinguish based only on overall accuracy.
-
----
-
-# 17. ROC-AUC Analysis
-
-Multiclass ROC curves are generated using a one-vs-rest approach.
-
-ROC-AUC provides an additional measure of how effectively the classifier separates each emotion from the remaining classes.
-
-## MobileNetV2
-
-![MobileNetV2 ROC-AUC](results/CNN/MobileNetV2_roc_auc.png)
-
-## DenseNet121
-
-![DenseNet121 ROC-AUC](results/CNN/DenseNet121_roc_auc.png)
-
-## ResNet50
-
-![ResNet50 ROC-AUC](results/CNN/ResNet50_roc_auc.png)
-
----
-
-# 18. ResNet50 Fine-Tuning
-
-After evaluating the three base models, **ResNet50 was selected for fine-tuning**.
-
-The other two models were not fine-tuned because the objective was to improve the strongest candidate while avoiding unnecessary additional training time and computational cost.
-
-The fine-tuning process uses:
+The fine-tuning setup used:
 
 ```text
-Best Base Model
-      |
-      v
-ResNet50
+Model:              ResNet50
+Previously Frozen:  ImageNet-pretrained backbone
+Fine-Tuning:        Selected backbone layers
+Learning Rate:      1e-5
+```
+
+The fine-tuning process was:
+
+```text
+Base ResNet50
       |
       v
 Unfreeze Selected Backbone Layers
@@ -636,14 +516,14 @@ Fine-Tuning
 Validation Monitoring
       |
       v
-Final Test Evaluation
+Test Evaluation
 ```
 
-The fine-tuned model is then compared against the original frozen-backbone ResNet50.
+The other two CNN architectures were not fine-tuned because the experiment focused on further improving the selected ResNet50 model.
 
 ---
 
-# 19. Fine-Tuned ResNet50 Performance
+# Fine-Tuned ResNet50 Results
 
 The fine-tuned ResNet50 achieved:
 
@@ -656,7 +536,7 @@ Macro F1:        58.30%
 Weighted F1:     61.30%
 ```
 
-Compared with the original ResNet50:
+### Base vs Fine-Tuned ResNet50
 
 | Metric          | Base ResNet50 | Fine-Tuned ResNet50 |
 | --------------- | ------------: | ------------------: |
@@ -666,8 +546,6 @@ Compared with the original ResNet50:
 | Macro Recall    |        0.5030 |          **0.5870** |
 | Macro F1        |        0.4973 |          **0.5830** |
 | Weighted F1     |        0.5307 |          **0.6130** |
-
-Fine-tuning produced a substantial improvement over the frozen-backbone ResNet50.
 
 ### Accuracy Improvement
 
@@ -681,11 +559,11 @@ Fine-tuning produced a substantial improvement over the frozen-backbone ResNet50
 0.4973 → 0.5830
 ```
 
-The fine-tuned model is therefore selected as the current final emotion classifier.
+The fine-tuned ResNet50 is used as the final emotion-classification model.
 
 ---
 
-# 20. Fine-Tuned ResNet50 Classification Report
+## Fine-Tuned ResNet50 Classification Report
 
 | Emotion              | Precision |    Recall |  F1-score |
 | -------------------- | --------: | --------: | --------: |
@@ -701,13 +579,13 @@ The fine-tuned model is therefore selected as the current final emotion classifi
 | **Macro Average**    | **0.589** | **0.587** | **0.583** |
 | **Weighted Average** | **0.615** | **0.621** | **0.613** |
 
-The strongest class-level performance is observed for **Happy** and **Neutral**, while **Disgust**, **Fear**, and **Surprise** remain more challenging.
+The highest F1-scores in the final classification report are observed for **Happy** and **Neutral**. Disgust, Fear and Surprise remain more challenging classes.
 
 ---
 
-# 21. Fine-Tuned ResNet50 ROC-AUC
+## Fine-Tuned ResNet50 ROC-AUC
 
-The per-class ROC-AUC values for the final fine-tuned ResNet50 model are:
+The final model's per-class ROC-AUC values are:
 
 | Emotion  | ROC-AUC |
 | -------- | ------: |
@@ -720,39 +598,58 @@ The per-class ROC-AUC values for the final fine-tuned ResNet50 model are:
 | Sad      |   0.924 |
 | Surprise |   0.743 |
 
-The final model demonstrates strong class discrimination for **Happy** and **Neutral**.
-
-The ROC-AUC for **Surprise** is comparatively lower, indicating that this class remains more difficult to separate from the other emotion categories.
+The ROC-AUC values are highest for **Happy** and **Neutral**, while **Surprise** has the lowest ROC-AUC among the eight classes.
 
 ---
 
-# 22. Final Model
+# Final Model
 
-The final model selected for the complete system is:
+The final emotion-classification model is:
 
 ```text
 Fine-Tuned ResNet50
 ```
 
-The final pipeline is therefore:
+The complete system combines:
 
 ```text
-Webcam / Image / Video
-          |
-          v
-   YOLO Face Detector
-          |
-          v
-     Face Cropping
-          |
-          v
-     Fine-Tuned ResNet50
-          |
-          v
-     8-Class Prediction
-          |
-          v
- Emotion + Confidence
+YOLO Face Detector
+        +
+Fine-Tuned ResNet50
+        +
+AffectNet-Derived Emotion Classification
+        =
+Real-Time Facial Emotion Detection
+```
+
+### Final Pipeline
+
+```text
+Webcam / Video
+       |
+       v
+YOLO Face Detector
+       |
+       v
+Face Bounding Boxes
+       |
+       v
+Face Cropping
+       |
+       v
+224 × 224 Preprocessing
+       |
+       v
+Fine-Tuned ResNet50
+       |
+       v
+8-Class Prediction
+       |
+       v
+Emotion + Confidence
+       |
+       v
+Annotated Output
 ```
 
 ### Final Test Performance
@@ -768,64 +665,30 @@ Webcam / Image / Video
 
 ---
 
-# 23. Final Model Random Predictions
+# Random Test Predictions
 
-The notebook also performs random predictions using images from the held-out test set.
+The notebook also performs random predictions using images from the test set.
 
 Each prediction displays:
 
-* the input face image,
+* input face image,
 * actual emotion,
 * predicted emotion,
 * prediction confidence.
 
 ![Final Model Random Predictions](results/CNN/final_random_predictions.png)
 
-These predictions provide a qualitative check of how the final model behaves on individual unseen samples.
+These predictions provide a qualitative check of the final model's behavior on individual test samples.
 
 ---
 
-# 24. Real-Time Video Pipeline
+# Real-Time Webcam Detection
 
-The final video-processing pipeline is:
+A standalone Python script is provided for real-time webcam inference:
 
 ```text
-Input Video
-     |
-     v
-Read Frame
-     |
-     v
-YOLO Face Detection
-     |
-     v
-Crop Detected Faces
-     |
-     v
-Fine-Tuned ResNet50
-     |
-     v
-Predict Emotion
-     |
-     v
-Draw Bounding Boxes
-     |
-     v
-Draw Emotion + Confidence
-     |
-     v
-Output Video
+src/webcam_detection.py
 ```
-
-The YOLO model remains responsible only for detecting faces.
-
-The fine-tuned ResNet50 model performs the emotion classification.
-
----
-
-# 25. Real-Time Webcam Detection
-
-A standalone Python script is provided for real-time webcam inference.
 
 The webcam pipeline is:
 
@@ -858,45 +721,45 @@ The webcam application displays:
 * emotion confidence,
 * real-time FPS.
 
-The camera and inference operations are separated using a threaded pipeline to prevent model inference from unnecessarily blocking webcam frame acquisition.
+The camera acquisition and model inference are handled using a threaded pipeline so that webcam frame capture does not unnecessarily wait for model inference.
 
 ---
 
-# 26. CNN Preprocessing During Inference
+# Inference Preprocessing
 
-The final Keras model contains the model-specific preprocessing layer used during training.
+The final Keras emotion-classification model contains the model-specific preprocessing layer used during training.
 
-Therefore, the webcam application does **not** apply the ResNet50 preprocessing operation a second time.
+Therefore, the webcam application does not apply ResNet50 preprocessing a second time.
 
 The inference flow is:
 
 ```text
 Detected Face
-     |
-     v
+      |
+      v
 BGR → RGB
-     |
-     v
+      |
+      v
 Resize to 224 × 224
-     |
-     v
+      |
+      v
 Float32 Conversion
-     |
-     v
+      |
+      v
 Fine-Tuned ResNet50
-     |
-     v
+      |
+      v
 Embedded Preprocessing
-     |
-     v
+      |
+      v
 Emotion Prediction
 ```
 
-This prevents double preprocessing during inference.
+This keeps the preprocessing behavior consistent between training and inference and avoids double preprocessing.
 
 ---
 
-# 27. Project Structure
+# Project Structure
 
 ```text
 real-time-emotion-detection/
@@ -921,10 +784,10 @@ real-time-emotion-detection/
 │   │   ├── ResNet50_roc_auc.png
 │   │   └── final_random_predictions.png
 │   │
-|   ├── integration/
-|   |    ├── emotion_detection.png
-│   │   ├── emotion_detection_output.mp4
-|   |
+│   ├── integration/
+│   │   ├── emotion_detection.png
+│   │   └── emotion_detection_output.mp4
+│   │
 │   └── demo.gif
 │
 ├── requirements.txt
@@ -936,7 +799,7 @@ Large trained model files and datasets should not be committed directly to the r
 
 ---
 
-# 28. Technologies Used
+# Technologies Used
 
 ### Programming
 
@@ -966,7 +829,7 @@ Large trained model files and datasets should not be committed directly to the r
 * Matplotlib
 * Seaborn
 
-### Development / Experimentation
+### Development and Experimentation
 
 * Google Colab
 * Jupyter Notebook
@@ -974,15 +837,15 @@ Large trained model files and datasets should not be committed directly to the r
 
 ---
 
-# 29. Installation
+# Installation
 
-Create a Python environment and install the required dependencies:
+Clone the repository and install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-For the local webcam application, the system should have:
+For local webcam inference, the system requires:
 
 * a working webcam,
 * compatible OpenCV installation,
@@ -993,47 +856,48 @@ For the local webcam application, the system should have:
 
 ---
 
-# 30. Running the CNN Notebook
+# Running the CNN Notebook
 
-The CNN notebook is responsible for training and evaluating the emotion-classification models.
-
-The workflow is:
+The CNN notebook contains the complete emotion-classification workflow.
 
 ```text
 1. Mount Google Drive
-2. Load AffectNet dataset
-3. Ignore labels.csv
-4. Read labels from class folders
-5. Analyze class distribution
-6. Split training data into training and validation sets
-7. Apply preprocessing
-8. Apply slight training augmentation
-9. Calculate class weights
-10. Build MobileNetV2
-11. Train MobileNetV2
-12. Evaluate MobileNetV2
-13. Build DenseNet121
-14. Train DenseNet121
-15. Evaluate DenseNet121
-16. Build ResNet50
-17. Train ResNet50
-18. Evaluate ResNet50
-19. Compare the three base models
-20. Select the best model
-21. Fine-tune only the selected model
-22. Evaluate the fine-tuned model
-23. Compare base and fine-tuned performance
-24. Save the final model
-25. Generate random test predictions
+2. Load AffectNet-derived dataset
+3. Read labels from class folders
+4. Analyze class distribution
+5. Split training data into training and validation sets
+6. Apply preprocessing
+7. Apply training augmentation
+8. Calculate class weights
+9. Build MobileNetV2
+10. Train MobileNetV2
+11. Evaluate MobileNetV2
+12. Build DenseNet121
+13. Train DenseNet121
+14. Evaluate DenseNet121
+15. Build ResNet50
+16. Train ResNet50
+17. Evaluate ResNet50
+18. Compare the three baseline models
+19. Select ResNet50 for fine-tuning
+20. Fine-tune selected ResNet50 layers
+21. Evaluate the fine-tuned model
+22. Compare base and fine-tuned performance
+23. Save the final model
+24. Generate random test predictions
 ```
 
-The original test set is kept separate and is used for final evaluation.
+The final emotion model is saved as:
+
+```text
+best_emotion_model.keras
+```
 
 ---
 
-# 31. Running the Webcam Application
+# Running the Webcam Application
 
-After obtaining the final fine-tuned ResNet50 model and keeping the trained YOLO face detector, update the model paths in:
+After obtaining the trained models, update the model paths in:
 
 ```text
 src/webcam_detection.py
@@ -1052,7 +916,7 @@ Then run:
 python src/webcam_detection.py
 ```
 
-The application opens the webcam and performs:
+The application performs:
 
 ```text
 Face Detection
@@ -1062,6 +926,8 @@ Face Cropping
 Emotion Classification
       ↓
 Confidence Display
+      ↓
+Real-Time FPS
 ```
 
 Press:
@@ -1080,83 +946,9 @@ to stop the application.
 
 ---
 
-# 32. Current Best Model
+# Limitations
 
-The current final emotion-classification model is:
-
-## Fine-Tuned ResNet50
-
-### Test Performance
-
-**Test Accuracy:** 62.07%
-
-**Macro Precision:** 0.589
-
-**Macro Recall:** 0.587
-
-**Macro F1:** 0.583
-
-**Weighted F1:** 0.613
-
-**Test Loss:** 1.2586
-
-The fine-tuned ResNet50 improves substantially over the original frozen-backbone ResNet50.
-
-```text
-Base ResNet50
-53.80% Accuracy
-       |
-       | Fine-Tuning
-       v
-Fine-Tuned ResNet50
-62.07% Accuracy
-```
-
-The YOLO face detector remains unchanged.
-
----
-
-# 33. Important Observations
-
-The final results show that fine-tuning the selected ResNet50 substantially improves emotion classification.
-
-However, performance varies considerably between emotion classes.
-
-The strongest class-level results are observed for:
-
-* Happy
-* Neutral
-* Sad
-* Contempt
-
-More challenging classes include:
-
-* Disgust
-* Fear
-* Surprise
-
-The final model achieves a particularly strong ROC-AUC for:
-
-```text
-Happy    → 0.987
-Neutral  → 0.965
-Sad      → 0.924
-Anger    → 0.903
-Fear     → 0.902
-Contempt → 0.897
-Disgust  → 0.870
-Surprise → 0.743
-```
-
-This demonstrates why overall accuracy alone is not sufficient for evaluating facial emotion classification.
-
-Macro-level metrics, class-wise F1-scores, confusion matrices and ROC-AUC are considered together.
-
----
-
-# 34. Limitations
-
-Although the final ResNet50 model provides a substantial improvement over the initial CNN baselines, facial emotion recognition remains a challenging computer vision problem.
+Facial emotion recognition remains a challenging computer vision problem.
 
 The current system can be affected by:
 
@@ -1170,27 +962,27 @@ The current system can be affected by:
 * similarities between emotion categories,
 * differences between dataset images and real-world webcam images.
 
-The lower performance of some emotion categories also indicates that the model does not classify all emotions equally well.
+Performance also varies across emotion classes, so the overall accuracy should not be interpreted as universal real-world emotion recognition accuracy.
 
-The reported test metrics should therefore not be interpreted as universal real-world emotion recognition accuracy.
+The reported metrics describe performance on the test dataset used in this experiment.
 
 Facial expressions are observable visual patterns and should not be treated as definitive measurements of a person's internal emotional state.
 
 ---
 
-# 35. Future Improvements
+# Future Improvements
 
-Potential future improvements include:
+Potential improvements include:
 
 * improved handling of difficult emotion classes,
 * targeted analysis of Disgust, Fear and Surprise,
 * face alignment before emotion classification,
-* temporal smoothing across consecutive video frames,
+* temporal smoothing across consecutive frames,
 * face tracking,
 * prediction stabilization,
 * confidence thresholding,
 * uncertainty estimation,
-* improved real-time inference optimization,
+* real-time inference optimization,
 * GPU-optimized deployment,
 * model quantization,
 * ONNX-based deployment,
@@ -1199,91 +991,32 @@ Potential future improvements include:
 
 ---
 
-# 36. Final System Architecture
+# Conclusion
 
-```text
-                         ┌─────────────────────────┐
-                         │ Image / Video / Webcam  │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │    YOLO Face Detector   │
-                         │       WIDER FACE        │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                              Face Bounding Boxes
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │     Face Cropping       │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │    Image Preprocessing  │
-                         │       224 × 224        │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │  Fine-Tuned ResNet50    │
-                         │       AffectNet         │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │ Emotion + Confidence    │
-                         └────────────┬────────────┘
-                                      │
-                                      ▼
-                         ┌─────────────────────────┐
-                         │ Annotated Live / Video  │
-                         │       Output            │
-                         └─────────────────────────┘
-```
+This project combines a **YOLO-based face detector** with a **fine-tuned ResNet50 emotion classifier** to create an end-to-end facial emotion detection pipeline.
 
----
+The project includes:
 
-# 37. Conclusion
+* WIDER FACE-based face detection,
+* AffectNet-derived emotion classification,
+* class-imbalance handling,
+* transfer learning,
+* comparison of three CNN architectures,
+* ResNet50 fine-tuning,
+* multiclass evaluation,
+* confusion matrix and ROC-AUC analysis,
+* and real-time webcam inference.
 
-This project combines **YOLO-based face detection** with **deep-learning-based facial emotion classification** to build an end-to-end real-time facial emotion detection system.
+The reported test accuracy improved from **53.80% with the frozen-backbone ResNet50 to 62.07% after fine-tuning**, while Macro F1 improved from **0.4973 to 0.5830**.
 
-The face-detection component uses a YOLO model trained on WIDER FACE and remains unchanged throughout the CNN experimentation.
-
-The emotion-classification component was rebuilt using the AffectNet dataset and evaluated through three independent transfer-learning CNN architectures:
-
-* MobileNetV2
-* DenseNet121
-* ResNet50
-
-The three models were evaluated using accuracy, precision, recall, F1-score, confusion matrices and ROC-AUC.
-
-ResNet50 achieved the strongest baseline performance and was selected for fine-tuning.
-
-The fine-tuned ResNet50 improved the test accuracy from:
-
-```text
-53.80% → 62.07%
-```
-
-and the Macro F1-score from:
-
-```text
-0.4973 → 0.5830
-```
-
-The final system therefore uses:
+The final system uses:
 
 ```text
 YOLO Face Detector
         +
 Fine-Tuned ResNet50
         +
-AffectNet Emotion Classification
+8-Class Emotion Classification
         =
 Real-Time Facial Emotion Detection
 ```
-
-The project demonstrates a complete computer-vision workflow covering **dataset preparation, class-imbalance handling, transfer learning, model comparison, selective fine-tuning, multiclass evaluation and real-time inference**.
