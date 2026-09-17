@@ -1,5 +1,13 @@
 # Real-Time Video-Based Facial Emotion Detection
 
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
+![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-FF6F00?logo=tensorflow&logoColor=white)
+![YOLO](https://img.shields.io/badge/YOLO-Face%20Detection-111111)
+![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)
+![AffectNet](https://img.shields.io/badge/Dataset-AffectNet-8A2BE2)
+![ResNet50](https://img.shields.io/badge/Final%20Model-ResNet50-1F77B4)
+
+
 A deep learning system for **real-time facial emotion detection from video and webcam streams**, combining YOLO-based face detection with CNN-based emotion classification.
 
 The system consists of two separate computer vision stages:
