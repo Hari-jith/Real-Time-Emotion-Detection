@@ -1,4 +1,4 @@
-# Real-Time Video-Based Facial Emotion Detection
+# Real-Time Video-Based Facial Emotion Detection Using YOLO and ResNet50
 
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
 ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.x-FF6F00?logo=tensorflow&logoColor=white)
